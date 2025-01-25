@@ -1,35 +1,59 @@
-import { VoiceState } from 'discord.js'
-import { joinVoiceChannel } from '@discordjs/voice'
-import logger from '../utils/logger' // ロガーのインポート
-// botをインポートする必要がある場合、適宜修正する
+import { GuildMember, VoiceBasedChannel, VoiceChannel, VoiceState } from "discord.js"
+import logger from "../utils/logger" // ロガーのインポート
+import { sendMessage } from "../utils/message"
 
-let voiceConnection: any = null // エラーハンドリングや型に注意
 
 export const handler = async (oldState: VoiceState, newState: VoiceState) => {
-    // ユーザーが新たにボイスチャンネルに参加した場合
-    if (!oldState.channel && newState.channel && !newState.member?.user.bot) {
-        const voiceChannel = newState.channel
-
-        logger.info(voiceChannel.id)
-        // ボイスチャンネルに参加
-        voiceConnection = joinVoiceChannel({
-            adapterCreator: voiceChannel.guild.voiceAdapterCreator,
-            channelId: voiceChannel.id,
-            guildId: voiceChannel.guild.id,
-        })
-
-        logger.info(`参加しました: ${voiceChannel.name}`)
-    }
-
-    // ボイスチャンネルから全員が退出した場合
-    if (oldState.channel && !newState.channel && voiceConnection) {
-        const oldChannel = oldState.channel
-
-        // チャンネルに残っているユーザーを確認
-        if (oldChannel.members.filter((member) => !member.user.bot).size === 0) {
-            logger.info(`ボイスチャンネルを離れます: ${oldChannel.name}`)
-            voiceConnection.destroy() // ボイスチャンネルから切断
-            voiceConnection = null
+    // ボイチャ参加・退出
+    if (oldState.channel != newState.channel) {
+        if (newState.channel != null)
+            joinVc(newState)
+        else if (oldState.channel != null) {
+            leaveVc(oldState)
         }
     }
+    // 画面共有の開始
+    if (oldState.streaming != newState.streaming && newState.streaming) {
+        startStreaming(newState)
+    }
+    // カメラ共有の開始
+    if (oldState.selfVideo != newState.selfVideo && newState.selfVideo) {
+        startCameraSharing(newState)
+    }
 }
+
+function joinVc(voiceState: VoiceState) {
+    if (!voiceState.member || voiceState.member?.user.bot)
+        return
+
+    logger.info("ユーザーがボイスチャット参加")
+    logger.debug(voiceState.channelId)
+    logger.debug(voiceState.channel?.name)
+    sendMessage(undefined, `${voiceState.member.displayName} が ${voiceState.channel} に参加しました`, true)
+}
+
+function leaveVc(voiceState: VoiceState) {
+    if (voiceState.member?.user.bot)
+        return
+
+    logger.info("ユーザーがボイスチャット離脱")
+    const userCount = getUserCount(voiceState.channel)
+    if (userCount == 0) {
+
+    }
+}
+
+function getUserCount(voiceChannel: VoiceBasedChannel | null): number {
+    let val = 0
+    voiceChannel?.members.forEach(member => {
+        if (!member.user.bot) val++
+    })
+    return val
+}
+
+function startStreaming(voiceState: VoiceState) {
+}
+
+function startCameraSharing(voiceState: VoiceState) {
+}
+
