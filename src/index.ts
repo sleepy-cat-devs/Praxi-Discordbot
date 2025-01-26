@@ -1,4 +1,4 @@
-import bot from "./bot"
+import { bot } from "./bot"
 import { Config } from "./config/config"
 
 //ボット作成時のトークンでDiscordと接続
