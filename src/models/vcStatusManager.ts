@@ -1,4 +1,4 @@
-import { Guild, GuildMember, TeamMember } from "discord.js"
+import { Guild, GuildMember } from "discord.js"
 import logger from "../utils/logger"
 
 export class vcStatusManager {
