@@ -7,12 +7,9 @@ const _DISCORD_TOKEN = process.env.DISCORD_TOKEN
 if (!_DISCORD_TOKEN)
     throw new Error("ENV_VAR: DISCORD_TOKEN not found")
 
-
 const _GUILDS_SETTINGS_DIRNAME = process.env.GUILDS_SETTINGS_DIRNAME
 if (!_GUILDS_SETTINGS_DIRNAME)
     throw new Error("ENV_VAR: GUILDS_SETTINGS_DIRNAME not found")
-
-
 
 const _CLI_OPTIONS = new Command()
     .option("-r, --release_mode", "リリースモードで起動します", false)

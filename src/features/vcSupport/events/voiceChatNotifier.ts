@@ -1,8 +1,14 @@
-import { TextChannel, VoiceBasedChannel, VoiceState } from "discord.js"
-import logger from "../utils/logger"
-import { sendMessage } from "../utils/message"
-import { notifyChannelMap } from "../bot"
+/**
+ * ボイスチャットの開始・終了その他事象について通知する処理
+ */
 
+import { TextChannel, VoiceBasedChannel, VoiceState } from "discord.js"
+import logger from "../../../utils/logger"
+import { sendMessage } from "../../../utils/message"
+import { notifyChannelMap } from "../../../bot"
+import { EventSetting } from "../../../models/eventSetting"
+
+export const eventSetting = new EventSetting("on", "voiceStateUpdate")
 
 export const handler = async (oldState: VoiceState, newState: VoiceState) => {
     // ボイチャ参加・退出
