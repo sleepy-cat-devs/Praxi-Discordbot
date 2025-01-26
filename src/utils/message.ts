@@ -1,4 +1,4 @@
-import { TextChannel, escapeMarkdown } from "discord.js";
+import { BaseChannel, BaseGuildTextChannel, escapeMarkdown, ForumChannel, TextBasedChannel, TextChannel } from "discord.js";
 
 import { Config } from "../config/config";
 import logger from "./logger";
@@ -7,20 +7,20 @@ import logger from "./logger";
  * 
  * @param channel 投稿対象のチャンネル
  * @param message 送信メッセージ
- * @param is_md_escape Markdownエスケープオプション
+ * @param isMdEscape Markdownエスケープオプション
  * @returns 
  */
 export const sendMessage = (
-    channel: TextChannel | undefined,
+    channel: BaseGuildTextChannel | undefined,
     message: string,
-    is_md_escape: boolean = false
+    isMdEscape: boolean = false
 ): void => {
     if (!channel) {
         logger.warn("送信チャンネルが未定義です")
         return
     }
 
-    if (is_md_escape)
+    if (isMdEscape)
         message = mdEscape(message)
 
     if (Config.IS_RELEASE) {
@@ -37,8 +37,11 @@ export const sendMessage = (
  */
 export const mdEscape = (text: string): string => {
     return escapeMarkdown(
+        // FIXME 実装に不安あり
         text
-            .replace(/#/g, "\\#")           // すべての #をエスケープ
+            .replace(/^#/g, "\\#")          // 行頭の #をエスケープ
+            .replace(/\n#/g, "\n\\#")       // 改行後の #をエスケープ
             .replace(/^-#/gm, "\\-#")       // 行頭の -# をエスケープ
+            .replace(/\n-#/gm, "\n\\-#")    // 改行後の -# をエスケープ
     )
 }
