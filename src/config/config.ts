@@ -3,10 +3,15 @@ import { Command } from "commander"
 
 dotenv.config()
 
-if (!process.env.DISCORD_TOKEN) {
-    throw new Error("環境変数DISCORD_TOKENが取得できませんでした")
-}
-const _DISCORD_TOKEN: string = process.env.DISCORD_TOKEN
+const _DISCORD_TOKEN = process.env.DISCORD_TOKEN
+if (!_DISCORD_TOKEN)
+    throw new Error("ENV_VAR: DISCORD_TOKEN not found")
+
+
+const _GUILDS_SETTINGS_DIRNAME = process.env.GUILDS_SETTINGS_DIRNAME
+if (!_GUILDS_SETTINGS_DIRNAME)
+    throw new Error("ENV_VAR: GUILDS_SETTINGS_DIRNAME not found")
+
 
 
 const _CLI_OPTIONS = new Command()
@@ -15,6 +20,11 @@ const _CLI_OPTIONS = new Command()
     .opts()
 
 export class Config {
-    public static DISCORD_TOKEN: string = _DISCORD_TOKEN
-    public static IS_RELEASE: boolean = _CLI_OPTIONS.release_mode
+    public static DISCORD_TOKEN: string
+        = _DISCORD_TOKEN as string
+    public static GUILDS_SETTINGS_DIRNAME: string
+        = _GUILDS_SETTINGS_DIRNAME as string
+
+    public static IS_RELEASE: boolean
+        = _CLI_OPTIONS.release_mode
 }
