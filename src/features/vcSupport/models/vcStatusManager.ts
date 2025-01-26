@@ -1,5 +1,5 @@
 import { Guild, GuildMember } from "discord.js"
-import logger from "../utils/logger"
+import logger from "../../../utils/logger"
 
 export class vcStatusManager {
     private _vcStatuses: Map<string, vcStatus>

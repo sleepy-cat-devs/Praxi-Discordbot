@@ -26,7 +26,7 @@ export const sendMessage = (
     if (Config.IS_RELEASE) {
         channel.send(message)
     } else {
-        logger.debug(`channel:${channel}\nmessage:${message}`)
+        logger.debug(`channel:${channel.name}\nmessage:${message}`)
     }
 }
 

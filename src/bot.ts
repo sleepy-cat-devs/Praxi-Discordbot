@@ -5,7 +5,7 @@ import * as path from "path"
 import { GatewayIntentBits, Client, Partials, Interaction, CommandInteraction } from "discord.js"
 
 import logger from "./utils/logger"
-import { vcNotifySettingManager } from "./models/vcNotifySettingManager"
+import { vcNotifySettingManager } from "./features/vcSupport/models/vcNotifySettingManager"
 import { EventSetting } from "./models/eventSetting"
 
 //Botで使うGatewayIntents、partials
@@ -23,42 +23,52 @@ const bot = new Client({
 
 const featuresDir = path.join(__dirname, "features")
 
+// スラッシュコマンドリスト
 const command_list = Array()
+
 fs.readdirSync(featuresDir).forEach(feature => {
     loadEvents(featuresDir, feature)
 
     loadCommands(featuresDir, feature)
 })
 
-const notifyChannelMap = new Map<string, vcNotifySettingManager>()
 
-//Botがきちんと起動したか確認
-const botReadyPromise = new Promise<Client>((resolve, reject) => {
-    bot.once("ready", () => {
-        logger.info("Ready!")
-        if (bot.user) {
-            logger.info(bot.user.tag)
+//Botが起動したか確認
+bot.once("ready", async () => {
+    logger.info("Ready!")
+    if (bot.user) {
+        logger.info(bot.user.tag)
+    }
+    // スラッシュコマンドをリセット
+    await bot.application?.commands.set([])
+    bot.guilds.cache.forEach(async guild => {
+        const commands = await guild.commands.fetch();
+
+        // 各スラッシュコマンドを削除
+        for (const command of commands.values()) {
+            await command.delete();
+            logger.info(`Deleted command: ${command.name}`);
         }
-
-        // 接続ギルド毎の処理
-        bot.guilds.cache.forEach(guild => {
-            const guildId = guild.id
-            notifyChannelMap.set(guildId, new vcNotifySettingManager(guildId))
-            bot.application?.commands.set(command_list, guildId)
-        })
+        bot.application?.commands.set(command_list, guild.id)
     })
 })
 
-export { bot, botReadyPromise, notifyChannelMap }
+export default bot
 
+/**
+ * 指定されたディレクトリ内のイベントを読み込む関数
+ * 
+ * @param featuresDir - 特徴ファイルが格納されているディレクトリのパス
+ * @param dirName - 読み込むイベントが含まれるサブディレクトリの名前
+ */
 function loadEvents(featuresDir: string, dirName: string) {
     const eventsPath = path.join(featuresDir, dirName, "events")
 
-    // eventsディレクトリ内のすべてのファイルを自動的に登録
-    logger.info("load events")
     if (!fs.existsSync(eventsPath))
         return
 
+    // eventsディレクトリ内のすべてのファイルを自動的に登録
+    logger.info("load events")
     fs.readdirSync(eventsPath).forEach(file => {
         if (!isTargetFile(file)) return
 
@@ -76,8 +86,7 @@ function loadEvents(featuresDir: string, dirName: string) {
             } catch (error) {
                 logger.error(`Event: ${eventSetting.eventName} error occurred`, error)
             }
-        }
-        )
+        })
     })
 }
 

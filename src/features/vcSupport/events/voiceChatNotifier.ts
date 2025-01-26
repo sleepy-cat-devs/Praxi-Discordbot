@@ -5,8 +5,8 @@
 import { TextChannel, VoiceBasedChannel, VoiceState } from "discord.js"
 import logger from "../../../utils/logger"
 import { sendMessage } from "../../../utils/message"
-import { notifyChannelMap } from "../../../bot"
 import { EventSetting } from "../../../models/eventSetting"
+import { notifyChannelMap } from "../models/vcNotifySettingManager"
 
 export const eventSetting = new EventSetting("on", "voiceStateUpdate")
 
@@ -29,6 +29,10 @@ export const handler = async (oldState: VoiceState, newState: VoiceState) => {
     }
 }
 
+/**
+ * ユーザーがボイスチャットに参加した際の処理を行う関数
+ * @param voiceState - 参加したユーザーのボイスステート情報
+ */
 function joinVc(voiceState: VoiceState) {
     if (!voiceState.member || voiceState.member?.user.bot)
         return

@@ -1,11 +1,11 @@
 import * as fs from "fs"
 import * as path from "path"
 
-import { Guild, StageChannel, TextChannel, VoiceChannel } from "discord.js"
+import { Guild, TextChannel, VoiceBasedChannel } from "discord.js"
 
-import { bot } from "../bot"
-import { Config } from "../config/config"
-import logger from "../utils/logger"
+import bot from "../../../bot"
+import { Config } from "../../../config/config"
+import logger from "../../../utils/logger"
 
 
 const notifySettingDirname = path.join(Config.GUILDS_SETTINGS_DIRNAME)
@@ -43,7 +43,7 @@ export class vcNotifySettingManager {
      * @param voiceChannel ボイスチャンネル（ステージ含む）
      * @param notifyChannel 通知チャンネル
      */
-    public setNotifyChannel(voiceChannel: VoiceChannel | StageChannel, notifyChannel: TextChannel) {
+    public setNotifyChannel(voiceChannel: VoiceBasedChannel, notifyChannel: TextChannel) {
         this._vcNotifyChannelIdMap.set(voiceChannel.id, notifyChannel.id)
     }
 
@@ -52,7 +52,7 @@ export class vcNotifySettingManager {
      * @param voiceChannel 通知チャンネルを取得するボイスチャンネル
      * @returns 通知チャンネル
      */
-    public getNotifyChannel(voiceChannel: VoiceChannel | StageChannel): TextChannel {
+    public getNotifyChannel(voiceChannel: VoiceBasedChannel): TextChannel {
         const notifyChannelId = this._vcNotifyChannelIdMap.get(voiceChannel.id)
         if (notifyChannelId)
             return this.getChannelFromChannelId(notifyChannelId)
@@ -97,3 +97,5 @@ export class vcNotifySettingManager {
         // TODO ファイル書き込みを追加
     }
 }
+
+export const notifyChannelMap = new Map<string, vcNotifySettingManager>()
