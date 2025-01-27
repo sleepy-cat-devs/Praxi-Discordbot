@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@discordjs/voice": "^0.18.0",
+    "axios": "^1.7.9",
     "discord.js": "^14.17.3",
     "dotenv": "^16.4.7",
     "tslog": "^4.9.3"
