@@ -2,5 +2,10 @@
     "cSpell.words": [
         "discordeno",
         "tslog"
-    ]
+    ],
+    "editor.codeActionsOnSave": {
+        "source.removeUnusedImports": "always",
+        "source.addMissingImports.ts": "always",
+        "source.sortImports": "always"
+    }
 }
