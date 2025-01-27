@@ -2,10 +2,9 @@
 import * as fs from "fs"
 import * as path from "path"
 
-import { GatewayIntentBits, Client, Partials, Interaction, CommandInteraction } from "discord.js"
+import { GatewayIntentBits, Client, Partials, Interaction, SlashCommandBuilder, CommandInteraction, User, Guild, ChatInputCommandInteraction } from "discord.js"
 
 import logger from "./utils/logger"
-import { vcNotifySettingManager } from "./features/vcSupport/models/vcNotifySettingManager"
 import { EventSetting } from "./models/eventSetting"
 
 //Botで使うGatewayIntents、partials
@@ -28,10 +27,8 @@ const command_list = Array()
 
 fs.readdirSync(featuresDir).forEach(feature => {
     loadEvents(featuresDir, feature)
-
     loadCommands(featuresDir, feature)
 })
-
 
 //Botが起動したか確認
 bot.once("ready", async () => {
@@ -40,15 +37,10 @@ bot.once("ready", async () => {
         logger.info(bot.user.tag)
     }
     // スラッシュコマンドをリセット
+    logger.info("Reset SlashCommand")
     await bot.application?.commands.set([])
-    bot.guilds.cache.forEach(async guild => {
-        const commands = await guild.commands.fetch();
 
-        // 各スラッシュコマンドを削除
-        for (const command of commands.values()) {
-            await command.delete();
-            logger.info(`Deleted command: ${command.name}`);
-        }
+    bot.guilds.cache.forEach(async guild => {
         bot.application?.commands.set(command_list, guild.id)
     })
 })
@@ -125,6 +117,7 @@ function loadCommands(featuresDir: string, dirName: string) {
             try {
                 command.handler(interaction)
             } catch (error) {
+                interaction.reply(`${interaction.commandName}の実行に失敗しました`)
                 logger.error(`Event: ${interaction.commandName} error occurred`, error)
             }
         })

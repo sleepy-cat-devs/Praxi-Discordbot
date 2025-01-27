@@ -2,10 +2,10 @@
  * ボイスチャットの開始・終了その他事象について通知する処理
  */
 
-import { TextChannel, VoiceBasedChannel, VoiceState } from "discord.js"
+import { GuildTextBasedChannel, VoiceBasedChannel, VoiceState } from "discord.js"
+import { EventSetting } from "../../../models/eventSetting"
 import logger from "../../../utils/logger"
 import { sendMessage } from "../../../utils/message"
-import { EventSetting } from "../../../models/eventSetting"
 import { notifyChannelMap } from "../models/vcNotifySettingManager"
 
 export const eventSetting = new EventSetting("on", "voiceStateUpdate")
@@ -88,7 +88,7 @@ function sendMessageToNotifyChannel(voiceState: VoiceState, message: string, isM
     sendMessage(getNotifyChannel(voiceState), message, isMdEscape)
 }
 
-function getNotifyChannel(voiceState: VoiceState): TextChannel {
+function getNotifyChannel(voiceState: VoiceState): GuildTextBasedChannel {
     const voiceChannel = voiceState.channel
     if (!voiceChannel)
         throw new Error("Channel not found")

@@ -1,7 +1,7 @@
 import * as fs from "fs"
 import * as path from "path"
 
-import { Guild, TextChannel, VoiceBasedChannel } from "discord.js"
+import { BaseGuildVoiceChannel, Guild, GuildTextBasedChannel, TextChannel } from "discord.js"
 
 import bot from "../../../bot"
 import { Config } from "../../../config/config"
@@ -43,7 +43,7 @@ export class vcNotifySettingManager {
      * @param voiceChannel ボイスチャンネル（ステージ含む）
      * @param notifyChannel 通知チャンネル
      */
-    public setNotifyChannel(voiceChannel: VoiceBasedChannel, notifyChannel: TextChannel) {
+    public setNotifyChannel(voiceChannel: BaseGuildVoiceChannel, notifyChannel: GuildTextBasedChannel) {
         this._vcNotifyChannelIdMap.set(voiceChannel.id, notifyChannel.id)
     }
 
@@ -52,7 +52,7 @@ export class vcNotifySettingManager {
      * @param voiceChannel 通知チャンネルを取得するボイスチャンネル
      * @returns 通知チャンネル
      */
-    public getNotifyChannel(voiceChannel: VoiceBasedChannel): TextChannel {
+    public getNotifyChannel(voiceChannel: BaseGuildVoiceChannel): GuildTextBasedChannel {
         const notifyChannelId = this._vcNotifyChannelIdMap.get(voiceChannel.id)
         if (notifyChannelId)
             return this.getChannelFromChannelId(notifyChannelId)
@@ -64,7 +64,7 @@ export class vcNotifySettingManager {
      * デフォルトの通知チャンネルを設定する
      * @param channel デフォルト通知チャンネル
      */
-    public setDefaultNotifyChannel(channel: TextChannel) {
+    public setDefaultNotifyChannel(channel: GuildTextBasedChannel) {
         this._defaultChannelId = channel.id
     }
 
@@ -73,7 +73,7 @@ export class vcNotifySettingManager {
      * @param channelId チャンネルID
      * @returns チャンネルオブジェクト
      */
-    private getChannelFromChannelId(channelId: string): TextChannel {
+    private getChannelFromChannelId(channelId: string): GuildTextBasedChannel {
         const channel = this.getGuild().channels.cache.get(channelId)
         if (!channel)
             throw new Error("Channel not found")
