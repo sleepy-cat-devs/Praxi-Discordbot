@@ -1,16 +1,16 @@
 import * as fs from "fs"
 import * as path from "path"
 
-import { BaseGuildVoiceChannel, Guild, GuildTextBasedChannel, TextChannel } from "discord.js"
+import { BaseGuildVoiceChannel, Guild, GuildTextBasedChannel } from "discord.js"
 
 import bot from "../../../bot"
 import { Config } from "../../../config/config"
 import logger from "../../../utils/logger"
 
 
-const notifySettingDirname = path.join(Config.GUILDS_SETTINGS_DIRNAME)
-if (!fs.existsSync(notifySettingDirname)) {
-    fs.mkdirSync(notifySettingDirname, { recursive: true })
+const notifySettingDirName = path.join(Config.GUILDS_SETTINGS_DIRNAME)
+if (!fs.existsSync(notifySettingDirName)) {
+    fs.mkdirSync(notifySettingDirName, { recursive: true })
     logger.info("通知設定フォルダを作成しました")
 }
 
@@ -19,23 +19,13 @@ export class vcNotifySettingManager {
     private _guildId: string
     private _vcNotifyChannelIdMap: Map<string, string>
 
-    private _defaultChannelId: string
+    private _defaultChannelId: string | undefined
 
     constructor(guildId: string) {
         this._guildId = guildId
-
-        // TODO ファイルからの設定読み込みを追加
-
         this._vcNotifyChannelIdMap = new Map<string, string>()
+        this.loadFile()
 
-        // 設定ファイルでデフォルトチャンネルを決めて置けるようにする
-        const systemChannel = this.getGuild().systemChannel
-        if (!systemChannel)
-            throw new Error("SystemChannel not found")
-
-        logger.debug(systemChannel.name)
-
-        this._defaultChannelId = systemChannel.id
     }
 
     /**
@@ -56,8 +46,16 @@ export class vcNotifySettingManager {
         const notifyChannelId = this._vcNotifyChannelIdMap.get(voiceChannel.id)
         if (notifyChannelId)
             return this.getChannelFromChannelId(notifyChannelId)
-        else
-            return this.getChannelFromChannelId(this._defaultChannelId)
+        else {
+            const defaultChannel = this._defaultChannelId ? this.getChannelFromChannelId(this._defaultChannelId) : null
+            if (defaultChannel) {
+                return defaultChannel;
+            }
+            const systemChannel = this.getGuild().systemChannel
+            if (!systemChannel)
+                throw new Error("SystemChannel not found")
+            return systemChannel
+        }
     }
 
     /**
@@ -77,8 +75,8 @@ export class vcNotifySettingManager {
         const channel = this.getGuild().channels.cache.get(channelId)
         if (!channel)
             throw new Error("Channel not found")
-        if (!(channel instanceof TextChannel))
-            throw new Error("Channel isn't TextChannel")
+        if (!channel.isTextBased())
+            throw new Error("Channel isn't GuildTextBasedChannel")
 
         return channel
     }
@@ -93,8 +91,32 @@ export class vcNotifySettingManager {
         return guild
     }
 
+    private getFilePath(): string {
+        return path.join(notifySettingDirName, `${this._guildId}.json`)
+    }
+
     private saveFile() {
         // TODO ファイル書き込みを追加
+        const notifyChannelObj = Object.fromEntries(this._vcNotifyChannelIdMap)
+        const saveObject = {
+            "defaultChannelId": this._defaultChannelId,
+            "notifyChannelMap": notifyChannelObj
+        }
+        const jsonData = JSON.stringify(saveObject, null, 2)
+
+        fs.writeFileSync(this.getFilePath(), jsonData, "utf8")
+    }
+
+    private loadFile() {
+        try {
+            const jsonData = fs.readFileSync(this.getFilePath(), "utf8")
+            const obj = JSON.parse(jsonData)
+            this._defaultChannelId = obj["defaultChannelId"]
+            this._vcNotifyChannelIdMap = new Map<string, string>(Object.entries(obj["notifyChannelMap"]))
+        } catch {
+            logger.error("ファイル読み込みに失敗しました")
+        }
+
     }
 }
 
