@@ -35,6 +35,7 @@ export class vcNotifySettingManager {
      */
     public setNotifyChannel(voiceChannel: BaseGuildVoiceChannel, notifyChannel: GuildTextBasedChannel) {
         this._vcNotifyChannelIdMap.set(voiceChannel.id, notifyChannel.id)
+        this.saveFile()
     }
 
     /**
@@ -64,6 +65,7 @@ export class vcNotifySettingManager {
      */
     public setDefaultNotifyChannel(channel: GuildTextBasedChannel) {
         this._defaultChannelId = channel.id
+        this.saveFile()
     }
 
     /**
@@ -114,7 +116,7 @@ export class vcNotifySettingManager {
             this._defaultChannelId = obj["defaultChannelId"]
             this._vcNotifyChannelIdMap = new Map<string, string>(Object.entries(obj["notifyChannelMap"]))
         } catch {
-            logger.error("ファイル読み込みに失敗しました")
+            logger.warn("ファイル読み込みに失敗しました")
         }
 
     }
