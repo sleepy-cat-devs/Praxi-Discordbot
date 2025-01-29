@@ -1,65 +1,60 @@
-import { Guild, GuildMember } from "discord.js"
+import { BaseGuildVoiceChannel, Guild, GuildMember } from "discord.js"
 import logger from "../../../utils/logger"
 
-export class vcStatusManager {
-    private _vcStatuses: Map<string, vcStatus>
 
-    constructor() {
-        this._vcStatuses = new Map<string, vcStatus>()
-    }
+const vcStatuses = new Map<string, vcStatus>()
 
-    /**
-     * VC実行中判定(登録済みか否か)
-     * @param channelId チャンネルID
-     * @returns 登録済みならばTrue
-     */
-    public isVcInProgress(channelId: string): boolean {
-        return this._vcStatuses.get(channelId) != undefined
-    }
 
-    /**
-     * VC開始処理
-     * @param channelId チャンネルID
-     * @returns 
-     */
-    public initVc(channelId: string) {
-        if (this.isVcInProgress(channelId)) {
-            logger.debug("")
-            return
-        }
-        this._vcStatuses.set(channelId, new vcStatus())
-    }
-
-    /**
-     * ボイスチャットの状態を取得する
-     * @param channelId チャンネルID
-     * @returns 指定ボイスチャット状態インスタンス
-     */
-    public getVcStatus(channelId: string): vcStatus | undefined {
-        return this._vcStatuses.get(channelId)
-    }
+/**
+ * ボイスチャットの状態を取得する
+ * @param channel チャンネルID
+ * @returns 指定ボイスチャット状態インスタンス
+ */
+export function getVcStatus(channel: BaseGuildVoiceChannel): vcStatus | undefined {
+    return vcStatuses.get(channel.id)
 }
 
-class vcStatus {
+/**
+ * VC開始処理
+ * @param channel チャンネルID
+ * @returns 
+ */
+export function initVc(channel: BaseGuildVoiceChannel) {
+    if (getVcStatus(channel)) {
+        logger.debug("開始済みです")
+        return
+    }
+    vcStatuses.set(channel.id, new vcStatus())
+}
+
+export function endVc(channel: BaseGuildVoiceChannel) {
+    logger.debug("ボイスチャットを終了")
+    vcStatuses.delete(channel.id)
+}
+
+
+export class vcStatus {
     private _memberIds: Set<string>
-    private _startTime: Date
     private _vcBeginTime: Date | undefined
     private _totalTime: number
 
-    constructor(vcStartTime: Date = this.now()) {
+    // VC実行中フラグ
+    private _isVcInProgress: boolean
+
+    constructor() {
         this._memberIds = new Set<string>()
-        this._startTime = vcStartTime
         this._vcBeginTime = undefined
         this._totalTime = 0
+        this._isVcInProgress = false
     }
 
     /**
      * ボイスチャット参加者を記録する
-     * @param memberId ユーザーID
+     * @param member ユーザー
      * @returns 
      */
-    public addMember(memberId: string) {
-        this._memberIds.add(memberId)
+    public addMember(member: GuildMember) {
+        this._memberIds.add(member.id)
     }
 
     /**
@@ -80,17 +75,27 @@ class vcStatus {
      * ボイスチャット開始時刻を記録する
      */
     public beginVc() {
+        if (this._isVcInProgress) {
+            logger.warn("VC継続中に開始しようとしました")
+            return
+        }
         this._vcBeginTime = this.now()
+        this._isVcInProgress = true
     }
 
     /**
      * ボイスチャット経過時間を記録する
      * @returns 
      */
-    public addTotalTime() {
+    public pauseVc() {
         if (!this._vcBeginTime)
             return
+        if (!this._isVcInProgress) {
+            logger.warn("VC中断中に中断しようとしました")
+            return
+        }
         this._totalTime += this.now().getTime() - this._vcBeginTime.getTime()
+        this._isVcInProgress = false
     }
 
     /**
@@ -100,17 +105,19 @@ class vcStatus {
      */
     public convertMsToHMS(
         ms: number = this._totalTime
-    ): { hours: number; minutes: number; seconds: number } {
+    ): { hours: number; minutes: number; seconds: number, milliseconds: number } {
         const totalSeconds = ms / 1000
 
         const hours = Math.trunc(totalSeconds / 3600)
         const minutes = Math.trunc((totalSeconds % 3600) / 60)
         const seconds = totalSeconds % 60
+        const milliseconds = ms % 1000
 
         return {
             hours,
             minutes,
-            seconds
+            seconds,
+            milliseconds
         }
 
     }

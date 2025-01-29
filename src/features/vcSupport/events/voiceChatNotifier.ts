@@ -7,6 +7,7 @@ import { EventSetting } from "../../../models/eventSetting"
 import logger from "../../../utils/logger"
 import { sendMessage } from "../../../utils/message"
 import { notifyChannelMap } from "../models/vcNotifySettingManager"
+import { endVc, getVcStatus, initVc, vcStatus } from "../models/vcStatusManager"
 
 export const eventSetting = new EventSetting("on", "voiceStateUpdate")
 
@@ -34,33 +35,89 @@ export const handler = async (oldState: VoiceState, newState: VoiceState) => {
  * @param voiceState - 参加したユーザーのボイスステート情報
  */
 function joinVc(voiceState: VoiceState) {
-    if (!voiceState.member || voiceState.member?.user.bot)
+    const voiceChannel = voiceState.channel
+    const joinedMember = voiceState.member
+    if (!voiceChannel || !joinedMember || joinedMember.user.bot)
         return
 
-    logger.info("ユーザーがボイスチャット参加")
-    logger.debug(voiceState.channelId)
-    logger.debug(voiceState.channel?.name)
 
     sendMessageToNotifyChannel(
         voiceState,
-        `${voiceState.member.displayName} が ${voiceState.channel} に参加しました`,
+        `${joinedMember.displayName} が ${voiceChannel} に参加しました`,
         true
     )
+
+    switch (getUserCount(voiceChannel)) {
+        // 1名なのでボイスチャットが始まっただけ
+        case 1:
+            initVc(voiceChannel)
+            break
+        // 2名なのでボイスチャットの通話が開始された
+        case 2:
+            getVcStatus(voiceChannel)?.beginVc()
+            break
+    }
+
+    getVcStatus(voiceChannel)?.addMember(joinedMember)
 }
 
 function leaveVc(voiceState: VoiceState) {
-    if (voiceState.member?.user.bot)
+    const voiceChannel = voiceState.channel
+    const leftMember = voiceState.member
+    if (!voiceChannel || !leftMember || leftMember.user.bot)
         return
 
     logger.info("ユーザーがボイスチャット離脱")
-    const userCount = getUserCount(voiceState.channel)
-    if (userCount == 0) {
-        sendMessageToNotifyChannel(
-            voiceState,
-            "ボイスチャットが終了しました"
-        )
+    const targetVcStatus = getVcStatus(voiceChannel)
+    if (!targetVcStatus)
+        return
+
+    switch (getUserCount(voiceChannel)) {
+        // 0名になったのでボイスチャット終了
+        case 0:
+            endVcPostSummary(targetVcStatus, voiceState)
+            break
+        // 1名なのでボイスチャット中断
+        case 1:
+            targetVcStatus.pauseVc()
+            break
     }
 }
+
+
+function endVcPostSummary(targetVcStatus: vcStatus, voiceState: VoiceState) {
+    const voiceChannel = voiceState.channel
+    if (!voiceChannel)
+        return
+    endVc(voiceChannel)
+
+    // 参加者一覧を取得
+    const vcMembers = targetVcStatus.getMembers(voiceState.guild)
+    // 参加者1名ならばボイスチャットではない
+    if (vcMembers.length == 1)
+        return
+
+    // ボイチャ時間を文字列に変換
+    const { hours, minutes, seconds, milliseconds } = targetVcStatus.convertMsToHMS()
+    const vcPeriodStr = [
+        hours > 0 ? `${hours}時間` : "",
+        minutes > 0 ? `${minutes}分` : "",
+        `${seconds}.${milliseconds}秒`
+    ].filter(Boolean).join("");
+
+    // 参加者の名前をコンマ区切りの文字列に変換
+    const memberListStr = vcMembers.map(vcMember => vcMember.displayName).join(", ");
+
+    // ボイスチャットの概要テキストを作成
+    const summaryMessage = `
+${voiceChannel}の通話が終了しました
+>>> 通話時間: ${vcPeriodStr}
+参加人数: ${vcMembers.length}
+参加者: ${memberListStr}
+`
+    sendMessageToNotifyChannel(voiceState, summaryMessage)
+}
+
 
 function getUserCount(voiceChannel: VoiceBasedChannel | null): number {
     let val = 0
@@ -84,6 +141,12 @@ function startCameraSharing(voiceState: VoiceState) {
     )
 }
 
+/**
+ * 指定されたボイスステートに関連する通知チャンネルにメッセージを送信する関数
+ * @param voiceState - メッセージを送信するボイスステート情報
+ * @param message - 送信するメッセージ内容
+ * @param isMdEscape - メッセージ内のMarkdownをエスケープするかどうかのフラグ（デフォルトはfalse）
+ */
 function sendMessageToNotifyChannel(voiceState: VoiceState, message: string, isMdEscape: boolean = false) {
     sendMessage(getNotifyChannel(voiceState), message, isMdEscape)
 }

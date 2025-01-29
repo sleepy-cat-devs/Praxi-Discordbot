@@ -2,7 +2,6 @@
  * 通知チャンネルの設定
  */
 import { BaseGuildVoiceChannel, ChannelType, ChatInputCommandInteraction, GuildMember, GuildTextBasedChannel, SlashCommandBuilder } from "discord.js";
-import { channelText } from "../../../utils/message";
 import { notifyChannelMap } from "../models/vcNotifySettingManager";
 
 export const command = new SlashCommandBuilder()
@@ -48,5 +47,5 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
 
     notifyChannelMap.get(interaction.guild.id)?.setNotifyChannel(voice_channel, notify_channel)
 
-    interaction.reply(`${channelText(voice_channel)} の通知先を ${channelText(notify_channel)}に設定しました`)
+    interaction.reply(`${voice_channel} の通知先を ${notify_channel}に設定しました`)
 }
