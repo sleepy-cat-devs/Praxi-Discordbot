@@ -61,6 +61,10 @@ function joinVc(voiceState: VoiceState) {
     getVcStatus(voiceChannel)?.addMember(joinedMember)
 }
 
+/**
+ * ユーザーがボイスチャットから離脱した際の処理を行う関数
+ * @param voiceState - 離脱したユーザーのボイスステート情報
+ */
 function leaveVc(voiceState: VoiceState) {
     const voiceChannel = voiceState.channel
     const leftMember = voiceState.member
@@ -85,6 +89,11 @@ function leaveVc(voiceState: VoiceState) {
 }
 
 
+/**
+ * ボイスチャットの概要を送信した後にボイスチャットを終了する処理を行う関数
+ * @param targetVcStatus - 終了するボイスチャットの状態情報
+ * @param voiceState - 終了するボイスチャットに関連するユーザーのボイスステート情報
+ */
 function endVcPostSummary(targetVcStatus: vcStatus, voiceState: VoiceState) {
     const voiceChannel = voiceState.channel
     if (!voiceChannel)
@@ -119,6 +128,11 @@ ${voiceChannel}の通話が終了しました
 }
 
 
+/**
+ * 指定されたボイスチャンネルに参加しているユーザーの数を取得する関数
+ * @param voiceChannel - ユーザー数を取得する対象のボイスチャンネル
+ * @returns - ボイスチャンネルに参加しているユーザーの数
+ */
 function getUserCount(voiceChannel: VoiceBasedChannel | null): number {
     let val = 0
     voiceChannel?.members.forEach(member => {
@@ -127,6 +141,10 @@ function getUserCount(voiceChannel: VoiceBasedChannel | null): number {
     return val
 }
 
+/**
+ * 画面共有を開始した際の処理を行う関数
+ * @param voiceState - 画面共有を開始したユーザーのボイスステート情報
+ */
 function startStreaming(voiceState: VoiceState) {
     sendMessageToNotifyChannel(
         voiceState,
@@ -134,6 +152,10 @@ function startStreaming(voiceState: VoiceState) {
     )
 }
 
+/**
+ * カメラ共有を開始した際の処理を行う関数
+ * @param voiceState - カメラ共有を開始したユーザーのボイスステート情報
+ */
 function startCameraSharing(voiceState: VoiceState) {
     sendMessageToNotifyChannel(
         voiceState,
@@ -151,6 +173,13 @@ function sendMessageToNotifyChannel(voiceState: VoiceState, message: string, isM
     sendMessage(getNotifyChannel(voiceState), message, isMdEscape)
 }
 
+/**
+ * 指定されたボイスステートに関連する通知チャンネルを取得する関数
+ * @param voiceState - 通知チャンネルを取得するためのボイスステート情報
+ * @returns - 通知チャンネル
+ * @throws - チャンネルが見つからない場合はエラーをスローする
+ * @throws - 通知チャンネルが見つからない場合はエラーをスローする
+ */
 function getNotifyChannel(voiceState: VoiceState): GuildTextBasedChannel {
     const voiceChannel = voiceState.channel
     if (!voiceChannel)
