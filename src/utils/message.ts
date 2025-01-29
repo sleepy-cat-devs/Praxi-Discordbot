@@ -1,4 +1,4 @@
-import { BaseChannel, BaseGuildTextChannel, BaseGuildVoiceChannel, escapeMarkdown, ForumChannel, GuildChannel, GuildTextBasedChannel, TextBasedChannel, TextChannel } from "discord.js";
+import { escapeMarkdown, GuildTextBasedChannel } from "discord.js";
 
 import { Config } from "../config/config";
 import logger from "./logger";
@@ -44,8 +44,4 @@ export const mdEscape = (text: string): string => {
             .replace(/^-#/gm, "\\-#")       // 行頭の -# をエスケープ
             .replace(/\n-#/gm, "\n\\-#")    // 改行後の -# をエスケープ
     )
-}
-
-export const channelText = (channel: GuildTextBasedChannel | BaseGuildVoiceChannel): string => {
-    return `<#${channel.id}>`
 }
