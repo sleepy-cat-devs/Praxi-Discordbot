@@ -3,6 +3,7 @@ import { default as bot } from "../../../bot";
 import { EventSetting } from "../../../models/eventSetting";
 import logger from "../../../utils/logger";
 import { openAIClient } from "../models/chatGPT";
+import { trySendTyping } from "../utility/botUtil";
 
 
 export const eventSetting = new EventSetting("on", Events.MessageCreate)
@@ -63,16 +64,4 @@ export const handler = async (message: Message) => {
         await message.reply(replyMessage);
     }
 
-}
-
-
-/**
- * 入力中を表示可能ならば表示する
- * 全てのチャンネルでTyping表示が出せるわけではない
- * @param channel チャンネルオブジェクト
- */
-async function trySendTyping(channel: any) {
-    if (typeof channel.sendTyping === "function") {
-        await channel.sendTyping();
-    }
 }

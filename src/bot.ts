@@ -2,10 +2,10 @@
 import * as fs from "fs"
 import * as path from "path"
 
-import { GatewayIntentBits, Client, Partials, Interaction, SlashCommandBuilder, CommandInteraction, User, Guild, ChatInputCommandInteraction } from "discord.js"
+import { Client, GatewayIntentBits, Interaction, Partials } from "discord.js"
 
-import logger from "./utils/logger"
 import { EventSetting } from "./models/eventSetting"
+import logger from "./utils/logger"
 
 //Botで使うGatewayIntents、partials
 const bot = new Client({
@@ -38,10 +38,10 @@ bot.once("ready", async () => {
     }
     // スラッシュコマンドをリセット
     logger.info("Reset SlashCommand")
-    await bot.application?.commands.set([])
+    bot.application?.commands.set([])
 
     bot.guilds.cache.forEach(async guild => {
-        bot.application?.commands.set(command_list, guild.id)
+        await bot.application?.commands.set(command_list, guild.id)
     })
 })
 
@@ -117,7 +117,7 @@ function loadCommands(featuresDir: string, dirName: string) {
             try {
                 command.handler(interaction)
             } catch (error) {
-                interaction.reply(`${interaction.commandName}の実行に失敗しました`)
+                interaction.editReply(`${interaction.commandName}の実行に失敗しました`)
                 logger.error(`Event: ${interaction.commandName} error occurred`, error)
             }
         })
