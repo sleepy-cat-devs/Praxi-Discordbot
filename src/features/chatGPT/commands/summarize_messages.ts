@@ -25,6 +25,12 @@ export const command = new SlashCommandBuilder()
             .setDescription("Set custom prompt message")
             .setDescriptionLocalization("ja", "カスタムのプロンプトを指定")
             .setRequired(false)
+    ).addBooleanOption(option =>
+        option.setName("use_bot_message")
+            .setNameLocalization("ja", "ボットメッセージを要約に含む")
+            .setDescription("Target Bot messages for summary (default: true)")
+            .setDescriptionLocalization("ja", "ボットメッセージを要約対象に含める(デフォルト: true)")
+            .setRequired(false)
     )
     .toJSON()
 
@@ -42,12 +48,16 @@ export const handler = async (interaction: ChatInputCommandInteraction) => {
     }
 
     const custom_prompt_message: string = interaction.options.getString("custom_prompt") ?? ""
+    const use_bot_message: boolean = interaction.options.getBoolean("use_bot_message") ?? true
 
     const messages = await channel.messages.fetch({ limit: fetch_count });
     const messageTexts = messages
         .reverse().map(msg => {
             if (msg.author.bot)
-                return `${msg.author.displayName}(ボットユーザー): ${msg.content}`
+                if (use_bot_message)
+                    return `${msg.author.displayName}(ボットユーザー): ${msg.content}`
+                else
+                    return
             return `${msg.author.displayName}: ${msg.content}`
         }
         ).join('\n');
