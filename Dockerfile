@@ -6,13 +6,12 @@ WORKDIR /app
 
 # 必要なファイルをコンテナにコピー
 COPY package*.json ./
-COPY src/ ./
+
+COPY src/ ./src/
 COPY .env ./
+COPY tsconfig.json ./
 # 依存関係をインストール
 RUN npm install
-
-# プロジェクト全体をコピー
-COPY . .
 
 # TypeScriptをトランスパイル
 RUN npm run build
