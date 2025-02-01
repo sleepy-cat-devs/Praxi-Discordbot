@@ -148,7 +148,7 @@ function getUserCount(voiceChannel: VoiceBasedChannel | null): number {
 function startStreaming(voiceState: VoiceState) {
     sendMessageToNotifyChannel(
         voiceState,
-        "画面共有を開始しました"
+        `${voiceState.member?.displayName}が${voiceState.channel}で画面共有を開始しました`
     )
 }
 
@@ -159,7 +159,7 @@ function startStreaming(voiceState: VoiceState) {
 function startCameraSharing(voiceState: VoiceState) {
     sendMessageToNotifyChannel(
         voiceState,
-        "カメラ共有を開始しました"
+        `${voiceState.member?.displayName}が${voiceState.channel}でカメラ共有を開始しました`
     )
 }
 
