@@ -6,6 +6,7 @@ WORKDIR /app
 
 # 必要なファイルをコンテナにコピー
 COPY package*.json ./
+
 COPY src/ ./src/
 COPY .env ./
 COPY tsconfig.json ./
