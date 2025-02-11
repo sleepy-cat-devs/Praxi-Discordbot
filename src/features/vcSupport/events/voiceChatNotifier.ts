@@ -111,7 +111,7 @@ function endVcPostSummary(targetVcStatus: vcStatus, voiceState: VoiceState) {
     const vcPeriodStr = [
         hours > 0 ? `${hours}時間` : "",
         minutes > 0 ? `${minutes}分` : "",
-        `${seconds}.${milliseconds}秒`
+        `${Math.trunc(seconds)}.${milliseconds}秒`
     ].filter(Boolean).join("");
 
     // 参加者の名前をコンマ区切りの文字列に変換
